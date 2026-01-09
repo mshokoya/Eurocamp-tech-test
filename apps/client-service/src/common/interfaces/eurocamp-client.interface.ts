@@ -1,4 +1,4 @@
-import { UserDto, CreateUserDto } from '../dto/api-response.dto';
+import { UserDto, CreateUserDto, ParcDto, CreateParcDto, BookingDto, CreateBookingDto } from '../dto/api-response.dto';
 
 export interface EurocampClientConfig {
   baseUrl: string;
@@ -14,4 +14,15 @@ export interface IEurocampClient {
   createUser(userData: CreateUserDto): Promise<UserDto>;
   deleteUser(id: string): Promise<void>;
 
+  // Parcs
+  getAllParcs(): Promise<ParcDto[]>;
+  getParcById(id: string): Promise<ParcDto>;
+  createParc(parcData: CreateParcDto): Promise<ParcDto>;
+  deleteParc(id: string): Promise<void>;
+
+  // Bookings
+  getAllBookings(): Promise<BookingDto[]>;
+  getBookingById(id: string): Promise<BookingDto>;
+  createBooking(bookingData: CreateBookingDto): Promise<BookingDto>;
+  deleteBooking(id: string): Promise<void>;
 }
