@@ -10,10 +10,8 @@ import {
 } from '../../common/dto/api-response.dto';
 import { AXIOS_INSTANCE_TOKEN } from '../axios-service';
 
-/**
- * Eurocamp API Client Service with built-in retry logic and error handling
- * Handles the flakey API endpoints that sometimes return 500/502 errors
- */
+
+// Eurocamp API Client Service with built-in retry logic and error handling
 
 @Injectable()
 export class EurocampClientService implements IEurocampClient {
@@ -30,25 +28,76 @@ export class EurocampClientService implements IEurocampClient {
   }
 
 
+  // Execute API call with retry logic for handling flakey endpoints
+  private async executeWithRetry<T>(
+    operation: () => Promise<AxiosResponse<T>>,
+    attempt = 1
+  ): Promise<T> {
+    try {
+      const response = await operation();
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+
+      // Don't retry on 4xx errors (client errors)
+      if (axiosError.response?.status && axiosError.response.status < 500) {
+        throw new ApiClientException(
+          `API Error: ${axiosError.message}`,
+          axiosError.response.status,
+          axiosError
+        );
+      }
+
+      // Retry on 5xx errors or network errors
+      if (attempt <= this.retryAttempts) {
+        this.logger.warn(`Attempt ${attempt} failed, retrying in ${this.retryDelay}ms...`);
+        await this.delay(this.retryDelay);
+        return this.executeWithRetry(operation, attempt + 1);
+      }
+
+      // Max retries exceeded
+      throw new ApiRetryException(
+        `API call failed after ${this.retryAttempts} retries: ${axiosError.message}`,
+        this.retryAttempts,
+        axiosError
+      );
+    }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+
+
   // Users API Methods
 
   // Get all users - handles flakey endpoint with 90% success rate
   async getAllUsers(): Promise<UserDto[]> {
-    return (await this.axiosInstance.get<ApiResponseDto<UserDto>>('/users')).data.data;
+    const response = await this.executeWithRetry(async () => {
+      return this.axiosInstance.get<ApiResponseDto<UserDto>>('/users');
+    });
+    return (response as ApiResponseDto<UserDto>).data;
   }
 
   // Get user by ID
   async getUserById(id: string): Promise<UserDto> {
-    return (await this.axiosInstance.get<UserDto>(`/users/${id}`)).data;
+    return this.executeWithRetry(async () => {
+      return this.axiosInstance.get<UserDto>(`/users/${id}`);
+    });
   }
 
   // Create new user - handles flakey endpoint with 30% success rate
   async createUser(userData: CreateUserDto): Promise<UserDto> {
-    return (await this.axiosInstance.post<UserDto>('/users', userData)).data;
+    return this.executeWithRetry(async () => {
+      return this.axiosInstance.post<UserDto>('/users', userData);
+    });
   }
 
   // Delete user by ID
   async deleteUser(id: string): Promise<void> {
-    return this.axiosInstance.delete(`/users/${id}`);
+    await this.executeWithRetry(async () => {
+      return this.axiosInstance.delete(`/users/${id}`);
+    });
   }
 }
