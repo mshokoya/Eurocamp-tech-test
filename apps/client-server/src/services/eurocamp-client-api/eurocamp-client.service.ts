@@ -7,6 +7,8 @@ import {
   UserDto,
   CreateUserDto,
   ApiResponseDto,
+  ParcDto,
+  CreateParcDto
 } from '../../common/dto/api-response.dto';
 import { AXIOS_INSTANCE_TOKEN } from '../axios-service';
 
@@ -68,7 +70,7 @@ export class EurocampClientService implements IEurocampClient {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-
+  // ---------
 
   // Users API Methods
 
@@ -98,6 +100,47 @@ export class EurocampClientService implements IEurocampClient {
   async deleteUser(id: string): Promise<void> {
     await this.executeWithRetry(async () => {
       return this.axiosInstance.delete(`/users/${id}`);
+    });
+  }
+
+  // ------------
+
+  // Parcs API Methods
+
+  /**
+   * Get all parcs
+   */
+  async getAllParcs(): Promise<ParcDto[]> {
+    const response = await this.executeWithRetry(async () => {
+      return this.axiosInstance.get<ApiResponseDto<ParcDto>>('/parcs');
+    });
+    return (response as ApiResponseDto<ParcDto>).data;
+  }
+
+  /**
+   * Get parc by ID - handles flakey endpoint with 70% success rate
+   */
+  async getParcById(id: string): Promise<ParcDto> {
+    return this.executeWithRetry(async () => {
+      return this.axiosInstance.get<ParcDto>(`/parcs/${id}`);
+    });
+  }
+
+  /**
+   * Create new parc
+   */
+  async createParc(parcData: CreateParcDto): Promise<ParcDto> {
+    return this.executeWithRetry(async () => {
+      return this.axiosInstance.post<ParcDto>('/parcs', parcData);
+    });
+  }
+
+  /**
+   * Delete parc by ID
+   */
+  async deleteParc(id: string): Promise<void> {
+    await this.executeWithRetry(async () => {
+      return this.axiosInstance.delete(`/parcs/${id}`);
     });
   }
 }
