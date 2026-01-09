@@ -223,6 +223,179 @@ describe('EurocampClientService', () => {
     });
   });
 
+  describe('Parcs API', () => {
+    describe('getAllParcs', () => {
+      it('should return parcs when API call succeeds', async () => {
+        const mockParcs = [
+          { id: '1', name: 'Sunny Beach Resort', description: 'Beautiful beachfront resort' },
+          { id: '2', name: 'Mountain View Lodge', description: 'Scenic mountain retreat' },
+        ];
+        const mockResponse: AxiosResponse = {
+          data: { data: mockParcs },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as never,
+        };
+
+        mockAxiosInstance.get.mockResolvedValue(mockResponse);
+
+        const result = await service.getAllParcs();
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/parcs');
+        expect(result).toEqual(mockParcs);
+      });
+
+      it('should retry and eventually succeed after failures', async () => {
+        const mockParcs = [{ id: '1', name: 'Test Parc', description: 'Test Description' }];
+        const mockResponse: AxiosResponse = {
+          data: { data: mockParcs },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as never,
+        };
+
+        const error = new AxiosError('Gateway Timeout', '504', {} as never, {}, {
+          status: 504,
+          statusText: 'Gateway Timeout',
+        } as AxiosResponse);
+
+        mockAxiosInstance.get
+          .mockRejectedValueOnce(error)
+          .mockRejectedValueOnce(error)
+          .mockResolvedValue(mockResponse);
+
+        const result = await service.getAllParcs();
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledTimes(3);
+        expect(result).toEqual(mockParcs);
+      });
+    });
+
+    describe('getParcById', () => {
+      it('should return parc when found', async () => {
+        const mockParc = { id: '1', name: 'Sunny Beach Resort', description: 'Beautiful beachfront resort' };
+        const mockResponse: AxiosResponse = {
+          data: mockParc,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as never,
+        };
+
+        mockAxiosInstance.get.mockResolvedValue(mockResponse);
+
+        const result = await service.getParcById('1');
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/parcs/1');
+        expect(result).toEqual(mockParc);
+      });
+
+      it('should handle flakey endpoint with retries (70% success rate)', async () => {
+        const mockParc = { id: '1', name: 'Test Parc', description: 'Test Description' };
+        const mockResponse: AxiosResponse = {
+          data: mockParc,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as never,
+        };
+
+        const error = new AxiosError('Bad Gateway', '502', {} as never, {}, {
+          status: 502,
+          statusText: 'Bad Gateway',
+        } as AxiosResponse);
+
+        mockAxiosInstance.get
+          .mockRejectedValueOnce(error)
+          .mockResolvedValue(mockResponse);
+
+        const result = await service.getParcById('1');
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2);
+        expect(result).toEqual(mockParc);
+      });
+
+      it('should throw ApiClientException when parc not found', async () => {
+        const error = new AxiosError('Not Found', '404', {} as never, {}, {
+          status: 404,
+          statusText: 'Not Found',
+        } as AxiosResponse);
+
+        mockAxiosInstance.get.mockRejectedValue(error);
+
+        await expect(service.getParcById('999')).rejects.toThrow(ApiClientException);
+        expect(mockAxiosInstance.get).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('createParc', () => {
+      it('should create parc successfully', async () => {
+        const newParc = { name: 'New Resort', description: 'Amazing new location' };
+        const createdParc = { id: '1', ...newParc };
+        const mockResponse: AxiosResponse = {
+          data: createdParc,
+          status: 201,
+          statusText: 'Created',
+          headers: {},
+          config: {} as never,
+        };
+
+        mockAxiosInstance.post.mockResolvedValue(mockResponse);
+
+        const result = await service.createParc(newParc);
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith('/parcs', newParc);
+        expect(result).toEqual(createdParc);
+      });
+
+      it('should retry on server errors', async () => {
+        const newParc = { name: 'New Resort', description: 'Amazing new location' };
+        const createdParc = { id: '1', ...newParc };
+        const mockResponse: AxiosResponse = {
+          data: createdParc,
+          status: 201,
+          statusText: 'Created',
+          headers: {},
+          config: {} as never,
+        };
+
+        const error = new AxiosError('Internal Server Error', '500', {} as never, {}, {
+          status: 500,
+          statusText: 'Internal Server Error',
+        } as AxiosResponse);
+
+        mockAxiosInstance.post
+          .mockRejectedValueOnce(error)
+          .mockResolvedValue(mockResponse);
+
+        const result = await service.createParc(newParc);
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledTimes(2);
+        expect(result).toEqual(createdParc);
+      });
+    });
+
+    describe('deleteParc', () => {
+      it('should delete parc successfully', async () => {
+        const mockResponse: AxiosResponse = {
+          data: null,
+          status: 204,
+          statusText: 'No Content',
+          headers: {},
+          config: {} as never,
+        };
+
+        mockAxiosInstance.delete.mockResolvedValue(mockResponse);
+
+        await service.deleteParc('1');
+
+        expect(mockAxiosInstance.delete).toHaveBeenCalledWith('/parcs/1');
+      });
+    });
+  });
+
   describe('Error Handling', () => {
     it('should handle network errors', async () => {
       const error = new Error('Network Error');

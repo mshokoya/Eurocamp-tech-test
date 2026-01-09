@@ -1,5 +1,5 @@
 export default () => ({
-  port: parseInt(process.env['PORT'] || '3002', 10),
+  port: parseInt(process.env['PORT'] || '3002'),
   eurocamp: {
     baseUrl: process.env['EUROCAMP_API_URL'] || 'http://localhost:3001',
     timeout: parseInt(process.env['EUROCAMP_TIMEOUT'] || '5000'),
