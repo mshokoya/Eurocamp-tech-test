@@ -1,0 +1,33 @@
+name: Client Service NestJS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/client-service/**'
+      - '.github/workflows/client-service-ci.yml'
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  test-and-build:
+    name: Test Client Service
+    runs-on: ubuntu-latest
+
+    steps:
+      # clones code from github to github-action virtual machine
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run unit tests
+        run: npx nx test client-service --watchAll=false
