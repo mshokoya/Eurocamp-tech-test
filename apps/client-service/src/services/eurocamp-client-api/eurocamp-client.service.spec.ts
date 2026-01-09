@@ -396,6 +396,243 @@ describe('EurocampClientService', () => {
     });
   });
 
+
+  // ------------
+
+  describe('Bookings API', () => {
+    describe('getAllBookings', () => {
+      it('should return bookings when API call succeeds', async () => {
+        const mockBookings = [
+          {
+            id: '1',
+            user: { id: 'user1', name: 'John Doe', email: 'john@example.com' },
+            parc: { id: 'parc1', name: 'Sunny Beach Resort', description: 'Beautiful resort' },
+            bookingdate: '2024-06-01',
+            comments: 'Special request for sea view'
+          },
+          {
+            id: '2',
+            user: { id: 'user2', name: 'Jane Smith', email: 'jane@example.com' },
+            parc: { id: 'parc2', name: 'Mountain Lodge', description: 'Mountain retreat' },
+            bookingdate: '2024-07-01',
+            comments: 'Quiet location preferred'
+          },
+        ];
+        const mockResponse: AxiosResponse = {
+          data: { data: mockBookings },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as never,
+        };
+
+        mockAxiosInstance.get.mockResolvedValue(mockResponse);
+
+        const result = await service.getAllBookings();
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/bookings');
+        expect(result).toEqual(mockBookings);
+      });
+
+      it('should handle flakey endpoint with retries (90% success rate)', async () => {
+        const mockBookings = [{
+          id: '1',
+          user: { id: 'user1', name: 'John Doe', email: 'john@example.com' },
+          parc: { id: 'parc1', name: 'Sunny Beach Resort', description: 'Beautiful resort' },
+          bookingdate: '2024-06-01',
+          comments: 'Special request'
+        }];
+        const mockResponse: AxiosResponse = {
+          data: { data: mockBookings },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as never,
+        };
+
+        const error = new AxiosError('Service Unavailable', '503', {} as never, {}, {
+          status: 503,
+          statusText: 'Service Unavailable',
+        } as AxiosResponse);
+
+        mockAxiosInstance.get
+          .mockRejectedValueOnce(error)
+          .mockResolvedValue(mockResponse);
+
+        const result = await service.getAllBookings();
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2);
+        expect(result).toEqual(mockBookings);
+      });
+    });
+
+    describe('getBookingById', () => {
+      it('should return booking when found', async () => {
+        const mockBooking = {
+          id: '1',
+          user: { id: 'user1', name: 'John Doe', email: 'john@example.com' },
+          parc: { id: 'parc1', name: 'Sunny Beach Resort', description: 'Beautiful resort' },
+          bookingdate: '2024-06-01',
+          comments: 'Special request for sea view'
+        };
+        const mockResponse: AxiosResponse = {
+          data: mockBooking,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as never,
+        };
+
+        mockAxiosInstance.get.mockResolvedValue(mockResponse);
+
+        const result = await service.getBookingById('1');
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/bookings/1');
+        expect(result).toEqual(mockBooking);
+      });
+
+      it('should throw ApiClientException when booking not found', async () => {
+        const error = new AxiosError('Not Found', '404', {} as never, {}, {
+          status: 404,
+          statusText: 'Not Found',
+        } as AxiosResponse);
+
+        mockAxiosInstance.get.mockRejectedValue(error);
+
+        await expect(service.getBookingById('999')).rejects.toThrow(ApiClientException);
+      });
+    });
+
+    describe('createBooking', () => {
+      it('should create booking successfully', async () => {
+        const newBooking = {
+          user: 'user1',
+          parc: 'parc1',
+          bookingdate: '2024-06-01',
+          comments: 'Special request for sea view'
+        };
+        const createdBooking = {
+          id: '1',
+          user: { id: 'user1', name: 'John Doe', email: 'john@example.com' },
+          parc: { id: 'parc1', name: 'Sunny Beach Resort', description: 'Beautiful resort' },
+          bookingdate: '2024-06-01',
+          comments: 'Special request for sea view'
+        };
+        const mockResponse: AxiosResponse = {
+          data: createdBooking,
+          status: 201,
+          statusText: 'Created',
+          headers: {},
+          config: {} as never,
+        };
+
+        mockAxiosInstance.post.mockResolvedValue(mockResponse);
+
+        const result = await service.createBooking(newBooking);
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith('/bookings', newBooking);
+        expect(result).toEqual(createdBooking);
+      });
+
+      it('should retry on server errors', async () => {
+        const newBooking = {
+          user: 'user1',
+          parc: 'parc1',
+          bookingdate: '2024-06-01',
+          comments: 'Special request'
+        };
+        const createdBooking = {
+          id: '1',
+          user: { id: 'user1', name: 'John Doe', email: 'john@example.com' },
+          parc: { id: 'parc1', name: 'Sunny Beach Resort', description: 'Beautiful resort' },
+          bookingdate: '2024-06-01',
+          comments: 'Special request'
+        };
+        const mockResponse: AxiosResponse = {
+          data: createdBooking,
+          status: 201,
+          statusText: 'Created',
+          headers: {},
+          config: {} as never,
+        };
+
+        const error = new AxiosError('Bad Gateway', '502', {} as never, {}, {
+          status: 502,
+          statusText: 'Bad Gateway',
+        } as AxiosResponse);
+
+        mockAxiosInstance.post
+          .mockRejectedValueOnce(error)
+          .mockResolvedValue(mockResponse);
+
+        const result = await service.createBooking(newBooking);
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledTimes(2);
+        expect(result).toEqual(createdBooking);
+      });
+
+      it('should not retry on conflict errors (409)', async () => {
+        const newBooking = {
+          user: 'user1',
+          parc: 'parc1',
+          bookingdate: '2024-06-01',
+          comments: 'Special request'
+        };
+        const error = new AxiosError('Conflict', '409', {} as never, {}, {
+          status: 409,
+          statusText: 'Conflict',
+        } as AxiosResponse);
+
+        mockAxiosInstance.post.mockRejectedValue(error);
+
+        await expect(service.createBooking(newBooking)).rejects.toThrow(ApiClientException);
+        expect(mockAxiosInstance.post).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('deleteBooking', () => {
+      it('should delete booking successfully', async () => {
+        const mockResponse: AxiosResponse = {
+          data: null,
+          status: 204,
+          statusText: 'No Content',
+          headers: {},
+          config: {} as never,
+        };
+
+        mockAxiosInstance.delete.mockResolvedValue(mockResponse);
+
+        await service.deleteBooking('1');
+
+        expect(mockAxiosInstance.delete).toHaveBeenCalledWith('/bookings/1');
+      });
+
+      it('should retry on server errors', async () => {
+        const mockResponse: AxiosResponse = {
+          data: null,
+          status: 204,
+          statusText: 'No Content',
+          headers: {},
+          config: {} as never,
+        };
+
+        const error = new AxiosError('Gateway Timeout', '504', {} as never, {}, {
+          status: 504,
+          statusText: 'Gateway Timeout',
+        } as AxiosResponse);
+
+        mockAxiosInstance.delete
+          .mockRejectedValueOnce(error)
+          .mockResolvedValue(mockResponse);
+
+        await service.deleteBooking('1');
+
+        expect(mockAxiosInstance.delete).toHaveBeenCalledTimes(2);
+      });
+    });
+  });
+
+
   describe('Error Handling', () => {
     it('should handle network errors', async () => {
       const error = new Error('Network Error');

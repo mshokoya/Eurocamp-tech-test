@@ -107,9 +107,7 @@ export class EurocampClientService implements IEurocampClient {
 
   // Parcs API Methods
 
-  /**
-   * Get all parcs
-   */
+  // Get all parcs
   async getAllParcs(): Promise<ParcDto[]> {
     const response = await this.executeWithRetry(async () => {
       return this.axiosInstance.get<ApiResponseDto<ParcDto>>('/parcs');
@@ -117,27 +115,23 @@ export class EurocampClientService implements IEurocampClient {
     return (response as ApiResponseDto<ParcDto>).data;
   }
 
-  /**
-   * Get parc by ID - handles flakey endpoint with 70% success rate
-   */
+
+  // Get parc by ID - handles flakey endpoint with 70% success rate
   async getParcById(id: string): Promise<ParcDto> {
     return this.executeWithRetry(async () => {
       return this.axiosInstance.get<ParcDto>(`/parcs/${id}`);
     });
   }
 
-  /**
-   * Create new parc
-   */
+
+  // Create new parc
   async createParc(parcData: CreateParcDto): Promise<ParcDto> {
     return this.executeWithRetry(async () => {
       return this.axiosInstance.post<ParcDto>('/parcs', parcData);
     });
   }
 
-  /**
-   * Delete parc by ID
-   */
+  // Delete parc by ID
   async deleteParc(id: string): Promise<void> {
     await this.executeWithRetry(async () => {
       return this.axiosInstance.delete(`/parcs/${id}`);
