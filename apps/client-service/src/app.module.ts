@@ -5,6 +5,7 @@ import AxiosService from './services/axios-service';
 import { EurocampClientService } from './services/eurocamp-client-api/eurocamp-client.service';
 import { UsersController } from './users/users.controller';
 import { BookingsController } from './bookings/bookings.controller';
+import { ParcsController } from './parcs/parcs.controller';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { BookingsController } from './bookings/bookings.controller';
       isGlobal: true,
     }),
   ],
-  controllers: [UsersController, BookingsController],
+  controllers: [UsersController, BookingsController, ParcsController],
   providers: [AxiosService, EurocampClientService],
 })
 export class AppModule { }
