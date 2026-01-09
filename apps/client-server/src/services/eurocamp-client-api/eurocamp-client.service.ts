@@ -23,8 +23,8 @@ export class EurocampClientService implements IEurocampClient {
     private readonly configService: ConfigService,
     @Inject(AXIOS_INSTANCE_TOKEN) private readonly axiosInstance: AxiosInstance
   ) {
-    this.retryAttempts = this.configService.get<number>('eurocamp.retryAttempts', 3);
-    this.retryDelay = this.configService.get<number>('eurocamp.retryDelay', 1000);
+    this.retryAttempts = this.configService.get<number>('eurocamp.retryAttempts');
+    this.retryDelay = this.configService.get<number>('eurocamp.retryDelay');
   }
 
 
