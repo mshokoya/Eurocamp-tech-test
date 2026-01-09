@@ -728,8 +728,6 @@ describe('EurocampClientService', () => {
     });
   });
 
-
-
   describe('Error Handling', () => {
     it('should handle network errors', async () => {
       const error = new Error('Network Error');
