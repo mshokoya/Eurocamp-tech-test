@@ -8,7 +8,9 @@ import {
   CreateUserDto,
   ApiResponseDto,
   ParcDto,
-  CreateParcDto
+  CreateParcDto,
+  BookingDto,
+  CreateBookingDto
 } from '../../common/dto/api-response.dto';
 import { AXIOS_INSTANCE_TOKEN } from '../axios-service';
 
@@ -135,6 +137,39 @@ export class EurocampClientService implements IEurocampClient {
   async deleteParc(id: string): Promise<void> {
     await this.executeWithRetry(async () => {
       return this.axiosInstance.delete(`/parcs/${id}`);
+    });
+  }
+
+  // Bookings API Methods
+
+
+  // Get all bookings - handles flakey endpoint with 90% success rate
+  async getAllBookings(): Promise<BookingDto[]> {
+    const response = await this.executeWithRetry(async () => {
+      return this.axiosInstance.get<ApiResponseDto<BookingDto>>('/bookings');
+    });
+    return (response as ApiResponseDto<BookingDto>).data;
+  }
+
+
+  // Get booking by ID
+  async getBookingById(id: string): Promise<BookingDto> {
+    return this.executeWithRetry(async () => {
+      return this.axiosInstance.get<BookingDto>(`/bookings/${id}`);
+    });
+  }
+
+  // Create new booking
+  async createBooking(bookingData: CreateBookingDto): Promise<BookingDto> {
+    return this.executeWithRetry(async () => {
+      return this.axiosInstance.post<BookingDto>('/bookings', bookingData);
+    });
+  }
+
+  // Delete booking by ID
+  async deleteBooking(id: string): Promise<void> {
+    await this.executeWithRetry(async () => {
+      return this.axiosInstance.delete(`/bookings/${id}`);
     });
   }
 }
