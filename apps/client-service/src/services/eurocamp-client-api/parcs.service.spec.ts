@@ -1,9 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AxiosResponse, AxiosError } from 'axios';
 import { EurocampClientService } from './eurocamp-client.service';
-import { ApiClientException, ApiRetryException } from '../../common/exceptions/api-exceptions';
+import { ApiClientException } from '../../common/exceptions/api-exceptions';
 import {
-  mockConfigService,
   createMockAxiosInstance,
   mockParcData,
   createMockResponse,

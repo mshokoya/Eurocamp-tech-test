@@ -1,0 +1,2 @@
+#!/bin/sh
+npm run client:test:unit && npm run client:lint:fix

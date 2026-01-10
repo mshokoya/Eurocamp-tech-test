@@ -30,4 +30,4 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Run unit tests
-        run: npx nx test client-service --watchAll=false
+        run: npm run client:test:unit

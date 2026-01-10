@@ -75,7 +75,7 @@ export const createMockResponse = <T>(data: T, status = 200): AxiosResponse => (
 });
 
 // Helper to create axios error
-export const createAxiosError = (statusCode: number = 500, message = 'Error') =>
+export const createAxiosError = (statusCode = 500, message = 'Error') =>
   new AxiosError(message, String(statusCode), {} as never, {}, {
     status: statusCode,
     statusText: 'Error',
