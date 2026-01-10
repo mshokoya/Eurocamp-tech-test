@@ -37,3 +37,19 @@ services:
       - 3001:8080
     depends_on:
       - eurocamp-db
+
+  client-service:
+    build:
+      context: .
+      dockerfile: './apps/client-service/Dockerfile.dev'
+    ports:
+      - 3002:3002
+    environment:
+      - CLIENT_SERVICE_PORT=3002
+      - EUROCAMP_API_URL=http://eurocamp-api:8080
+      - CLIENT_SERVICE_TIMEOUT=5000
+      - CLIENT_SERVICE_RETRY_ATTEMPTS=3
+      - CLIENT_SERVICE_RETRY_DELAY=1000
+    depends_on:
+      - eurocamp-api
+
