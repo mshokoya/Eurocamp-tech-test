@@ -12,7 +12,7 @@ export default {
     const timeout = configService.get<number>('eurocamp.timeout');
 
     return axios.create({
-      baseURL: baseUrl,
+      baseURL: `${baseUrl}/api/1`,
       timeout: timeout,
       headers: { 'Content-Type': 'application/json' },
     });
