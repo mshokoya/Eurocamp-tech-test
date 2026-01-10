@@ -6,6 +6,7 @@
     "postinstall": "husky install",
     "client:lint": "nx run client-service:lint",
     "client:lint:fix": "nx run client-service:lint --fix",
+    "client:test": "npm run client:test:unit && npm run client:test:e2e",
     "client:test:unit": "nx run client-service:test --no-cache",
     "client:test:e2e": " nx run client-service-e2e:e2e --no-cache",
     "client:serve": "nx run client-service:serve",

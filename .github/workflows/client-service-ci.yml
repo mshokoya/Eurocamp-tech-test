@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'apps/client-service/**'
+      - 'apps/client-service-e2e/**'
       - '.github/workflows/client-service-ci.yml'
 
 env:
@@ -14,6 +15,21 @@ jobs:
   test-and-build:
     name: Test Client Service
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: eurocamp_api
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
 
     steps:
       # clones code from github to github-action virtual machine
@@ -31,3 +47,15 @@ jobs:
 
       - name: Run unit tests
         run: npm run client:test:unit
+
+      - name: Start Docker services
+        run: docker-compose up -d --force-recreate
+
+      - name: Wait for services to be ready
+        run: sleep 10
+
+      - name: Seed database
+        run: docker exec engineering-test-main-eurocamp-api_1 npm run seed:run
+
+      - name: Run e2e tests
+        run: npm run client:test:e2e
