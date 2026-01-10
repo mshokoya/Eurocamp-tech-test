@@ -7,6 +7,7 @@
     "start:all": "docker-compose up",
     "start:deps": "docker-compose up eurocamp-db eurocamp-api",
     "start:api": "nx run engineering:serve",
+    "start:serve": "nx run-many --target=serve --all",
     "seed:run": "nx run engineering:seedrun",
     "test:api": "nx run engineering:test",
     "test:api:watch": "nx run engineering:test --watch",
