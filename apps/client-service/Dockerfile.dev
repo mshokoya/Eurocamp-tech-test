@@ -1,6 +1,7 @@
-FROM node:lts-bookworm
+FROM node:24-alpine
 
-RUN apt-get update -y && npm install -g nx && npm install -g @nrwl/cli
+RUN apk add --no-cache python3 make g++ && \
+    npm install -g nx @nrwl/cli
 
 COPY --chown=node:node . /usr/src/app
 
