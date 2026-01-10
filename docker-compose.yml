@@ -24,7 +24,6 @@ services:
     build:
       context: .
       dockerfile: './apps/engineering/Dockerfile.dev'
-    container name: engineering-test_eurocamp-api_1
     links:
       - eurocamp-db
     
