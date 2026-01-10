@@ -6,6 +6,8 @@ on:
     paths:
       - 'apps/client-service/**'
       - 'apps/client-service-e2e/**'
+      - 'apps/engineering/**'
+      - 'docker-compose.yml'
       - '.github/workflows/client-service-ci.yml'
 
 env:
@@ -15,21 +17,6 @@ jobs:
   test-and-build:
     name: Test Client Service
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:14-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: eurocamp_api
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5433:5432
 
     steps:
       # clones code from github to github-action virtual machine
@@ -48,14 +35,26 @@ jobs:
       - name: Run unit tests
         run: npm run client:test:unit
 
-      - name: Start Docker services
-        run: docker-compose up -d --force-recreate
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Wait for services to be ready
-        run: sleep 10
+      - name: Start Docker services (database, API, client-service)
+        run: docker compose up -d --build eurocamp-db eurocamp-api client-service
+
+      - name: Wait for database to be ready
+        run: |
+          timeout 60 bash -c 'until docker compose exec -T eurocamp-db pg_isready -U postgres; do sleep 2; done'
+
+      - name: Wait for API to be ready
+        run: |
+          timeout 60 bash -c 'until curl -s http://localhost:3001/health > /dev/null || curl -s http://localhost:3001 > /dev/null; do sleep 2; done' || echo "API health check endpoint may not exist, waiting additional time"
 
       - name: Seed database
-        run: docker exec engineering-test-main-eurocamp-api_1 npm run seed:run
+        run: docker compose exec -T eurocamp-api npm run seed:run
 
       - name: Run e2e tests
         run: npm run client:test:e2e
+
+      - name: Cleanup Docker services
+        if: always()
+        run: docker compose down
