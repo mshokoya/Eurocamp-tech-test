@@ -87,21 +87,3 @@ npm run client:test:unit
 | Unit Tests   | `npm run client:test:unit`                             | Test individual functions/components     |
 | App URL      | [http://localhost:3002](http://localhost:3002)         | Frontend + API running locally           |
 | Swagger Docs | [http://localhost:3002/api](http://localhost:3002/api) | Interactive API documentation            |
-
-```
-
----
-
-This version now:  
-- Includes **3.1, 3.2, and 3.3** with clear headings  
-- Shows **app URL, Swagger docs, and test commands** clearly  
-- Adds a **Quick Reference table** for fast access  
-- Looks professional, clean, and GitHub-ready  
-
----
-
-If you want, I can also **polish Tasks 1 & 2 further** with subheadings and spacing so the **entire Notes.md looks like a top-tier professional GitHub doc**.  
-
-Do you want me to do that?
-```
-
